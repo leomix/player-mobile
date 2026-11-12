@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Aura Audio & Lyrics Player</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Selectores de archivos nativos para Android / Móvil -->
+  <input type="file" id="mobileFileInput" multiple accept="audio/*,.lrc,.opus,.m4a,.mp3,.flac,.wav,.ogg" style="display:none">
+  <input type="file" id="mobileFolderInput" webkitdirectory directory multiple style="display:none">
+  <!-- Contenedor principal de la aplicación -->
+  <div class="app-container">
+    
+    <!-- Barra Lateral: Lista de Canciones y Carpeta -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-brand-row">
+          <div class="brand">
+            <div class="brand-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+            <span class="brand-title">Aura Player</span>
+          </div>
+
+          <button id="btnOpenFolder" class="btn-open-folder-top" title="Abrir carpeta con archivos MP3/M4A/WAV">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              <line x1="12" y1="11" x2="12" y2="17"></line>
+              <line x1="9" y1="14" x2="15" y2="14"></line>
+            </svg>
+            <span>Abrir</span>
+          </button>
+        </div>
+        
+        <div class="sidebar-actions">
+          <button id="btnOpenDownloadModal" class="btn-yt-download" title="Descargar audio y subtítulos LRC de YouTube">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+            </svg>
+            <span>YouTube</span>
+          </button>
+
+          <button id="btnOpenSpotifyModal" class="btn-spotify-download" title="Descargar canciones, álbumes o playlists de Spotify">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.494 17.306c-.216.353-.675.466-1.028.25-2.817-1.722-6.363-2.112-10.539-1.157-.404.093-.812-.162-.904-.566-.093-.404.162-.812.566-.904 4.575-1.045 8.5-4.597 11.655.45.353.216.466.675.25 1.028zm1.464-3.26c-.272.443-.853.585-1.296.313-3.226-1.982-8.144-2.556-11.96-1.398-.5.152-1.034-.132-1.186-.632-.152-.5.132-1.034.632-1.186 4.364-1.324 9.78-.686 13.498 1.606.443.272.585.853.313 1.296zm.126-3.41c-3.869-2.297-10.25-2.508-13.935-1.39-.594.18-1.228-.158-1.408-.752-.18-.594.158-1.228.752-1.408 4.238-1.286 11.289-1.038 15.753 1.613.535.318.71 1.01.392 1.545-.318.535-1.01.71-1.545.392z"/>
+            </svg>
+            <span>Spotify</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Buscador -->
+      <div class="search-box">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Filtrar canciones..." autocomplete="off">
+        <button id="btnClearSearch" class="btn-icon-subtle hidden" title="Limpiar búsqueda">✕</button>
+      </div>
+
+      <!-- Información de carpeta actual -->
+      <div class="folder-meta" id="folderMeta">
+        <span class="folder-path" id="folderPathText">Ninguna carpeta cargada</span>
+        <span class="folder-stats" id="folderStatsText">0 canciones</span>
+      </div>
+
+      <!-- Lista de canciones -->
+      <div class="song-list-container" id="songListContainer">
+        <div class="empty-list" id="emptyListState">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/>
+          </svg>
+          <p>Selecciona una carpeta o arrástrala aquí para listar tus canciones.</p>
+        </div>
+        <ul class="song-list" id="songList"></ul>
+      </div>
+    </aside>
+
+    <!-- Área Principal: Pantalla de Subtítulos con Superposición por Bloques (YouTube Style) -->
+    <main class="main-content">
+      <!-- Fondo ambiental difuminado reactivo -->
+      <div class="ambient-background" id="ambientBg"></div>
+
+      <!-- Barra superior del contenido -->
+      <header class="main-header">
+        <div class="track-header-info">
+          <div class="track-header-cover" id="headerCover">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+          <div class="track-header-text">
+            <h2 id="headerTitle">Selecciona una canción</h2>
+            <p id="headerArtist">Doble clic en la lista para reproducir</p>
+          </div>
+        </div>
+
+        <!-- Herramientas de subtítulo -->
+        <div class="lyrics-tools">
+          <div class="sync-offset-control" id="syncOffsetControl" title="Ajuste fino de sincronización">
+            <span class="sync-label">Sincronización:</span>
+            <button class="btn-chip" id="btnOffsetMinus" title="Retrasar 0.2s">-0.2s</button>
+            <span id="offsetValueText" class="offset-badge">0.0s</span>
+            <button class="btn-chip" id="btnOffsetPlus" title="Adelantar 0.2s">+0.2s</button>
+            <button class="btn-chip btn-chip-reset" id="btnOffsetReset" title="Restablecer">↺</button>
+          </div>
+
+          <button id="btnRomanize" class="btn-secondary" title="Activar/desactivar romanización al vuelo de Coreano, Ruso, Griego y Japonés (R)">
+            <span class="romanize-icon">Aa</span>
+            <span id="btnRomanizeText">Romanizar</span>
+          </button>
+
+          <button id="btnToggleViewMode" class="btn-secondary" title="Alternar entre Superposición por Bloques y Lista Completa">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12"></line>
+              <line x1="3" y1="6" x2="21" y2="6"></line>
+              <line x1="3" y1="18" x2="21" y2="18"></line>
+            </svg>
+            <span id="btnViewModeText">Ver Lista Completa</span>
+          </button>
+
+          <button id="btnLoadSubtitleManual" class="btn-secondary" title="Vincular archivo de letra LRC, SRT o VTT manualmente">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+            <span id="btnSubtitleText">Cargar Letra</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- VISTA PRINCIPAL: Superposición por Bloques (YouTube Overlapping Style) -->
+      <section class="youtube-stage" id="youtubeStage">
+        <!-- Portada de la canción -->
+        <div class="stage-cover-container">
+          <div class="stage-cover-card" id="stageCoverCard">
+            <img id="stageCoverImg" src="" alt="Cover" class="hidden">
+            <div class="stage-cover-fallback" id="stageCoverFallback">
+              <svg width="68" height="68" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+                <path d="M9 18V5l12-2v13"></path>
+                <circle cx="6" cy="18" r="3"></circle>
+                <circle cx="18" cy="16" r="3"></circle>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-track-meta">
+          <h1 id="stageTitle">Listo para reproducir</h1>
+          <p id="stageArtist">Aura Audio Player</p>
+        </div>
+
+        <!-- CONTENEDOR DE SUBTÍTULOS POR BLOQUES SUPERPUESTOS (YOUTUBE OVERLAPPING) -->
+        <div class="yt-captions-wrapper" id="ytCaptionsWrapper">
+          <div class="yt-captions-badge">
+            <span class="yt-badge-dot"></span>
+            <span class="yt-badge-label">Superposición por Bloques (YouTube Style)</span>
+          </div>
+
+          <!-- Ventana deslizante donde coexisten los bloques superpuestos -->
+          <div class="yt-caption-window" id="ytCaptionWindow">
+            <div class="yt-block">
+              <span class="yt-word pending">♪ Esperando reproducción ♪</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VISTA ALTERNATIVA: Lista de Letras Completa (Intercambiable) -->
+      <section class="lyrics-viewport hidden" id="lyricsViewport">
+        <div class="lyrics-placeholder" id="lyricsPlaceholder">
+          <div class="placeholder-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2">
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+            </svg>
+          </div>
+          <h3>Letras completas</h3>
+          <p>No hay letras cargadas actualmente.</p>
+        </div>
+        <div class="lyrics-container" id="lyricsContainer"></div>
+      </section>
+    </main>
+
+    <!-- Barra Inferior: Controles de Audio y Transporte -->
+    <footer class="player-bar">
+      <!-- Izquierda: Canción actual -->
+      <div class="player-left">
+        <div class="current-cover-wrapper" id="currentCoverWrapper">
+          <img id="currentCoverImg" src="" alt="Portada" class="current-cover hidden">
+          <div class="cover-fallback" id="coverFallback">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 18V5l12-2v13"></path>
+              <circle cx="6" cy="18" r="3"></circle>
+              <circle cx="18" cy="16" r="3"></circle>
+            </svg>
+          </div>
+        </div>
+        <div class="current-info">
+          <div class="current-title-wrapper">
+            <span class="current-title" id="currentTitle">Sin reproducción</span>
+          </div>
+          <div class="current-meta-row">
+            <span class="current-artist" id="currentArtist">—</span>
+            <span class="current-sub-badge hidden" id="currentSubBadge">LRC</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Centro: Controles de Transporte y Barra de Progreso -->
+      <div class="player-center">
+        <div class="transport-buttons">
+          <button id="btnShuffle" class="btn-control" title="Reproducción aleatoria (Shuffle)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+          </button>
+
+          <button id="btnPrev" class="btn-control" title="Canción anterior">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="19 20 9 12 19 4 19 20"></polygon>
+              <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line>
+            </svg>
+          </button>
+
+          <button id="btnPlayPause" class="btn-play" title="Reproducir / Pausar (Espacio)">
+            <svg id="iconPlay" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <svg id="iconPause" width="22" height="22" viewBox="0 0 24 24" fill="currentColor" class="hidden">
+              <rect x="6" y="4" width="4" height="16" rx="1"></rect>
+              <rect x="14" y="4" width="4" height="16" rx="1"></rect>
+            </svg>
+          </button>
+
+          <button id="btnNext" class="btn-control" title="Siguiente canción">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 4 15 12 5 20 5 4"></polygon>
+              <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line>
+            </svg>
+          </button>
+
+          <button id="btnRepeat" class="btn-control" title="Repetir (Todas / Una / Ninguna)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="17 1 21 5 17 9"></polyline>
+              <path d="M3 11V9a4 4 0 0 1 4-4h14"></path>
+              <polyline points="7 23 3 19 7 15"></polyline>
+              <path d="M21 13v2a4 4 0 0 1-4 4H3"></path>
+            </svg>
+            <span id="repeatOneIndicator" class="repeat-one-indicator hidden">1</span>
+          </button>
+        </div>
+
+        <!-- Barra de Progreso y Tiempo -->
+        <div class="progress-container">
+          <span class="time-label" id="timeCurrent">00:00</span>
+          <div class="progress-bar-wrapper" id="progressBarWrapper" title="Haz clic o arrastra para cambiar de posición">
+            <div class="progress-bar-track">
+              <div class="progress-bar-fill" id="progressBarFill"></div>
+              <div class="progress-bar-thumb" id="progressBarThumb"></div>
+            </div>
+          </div>
+          <span class="time-label" id="timeTotal">00:00</span>
+        </div>
+      </div>
+
+      <!-- Derecha: Velocidad y Volumen -->
+      <div class="player-right">
+        <!-- Selector de Velocidad de Reproducción (Slider oculto que se muestra al dar clic) -->
+        <div class="speed-container" id="speedContainer">
+          <button id="btnSpeed" class="btn-speed" title="Velocidad de reproducción (clic para mostrar slider)">1.0x</button>
+          <div class="speed-slider-wrapper hidden" id="speedSliderWrapper">
+            <input type="range" id="speedSlider" min="0.5" max="2.0" step="0.05" value="1.0" class="speed-slider" title="Ajustar velocidad (0.5x - 2.0x)">
+            <button id="btnSpeedReset" class="btn-speed-reset" title="Restablecer a 1.0x">↺</button>
+          </div>
+        </div>
+
+        <div class="volume-container">
+          <button id="btnMute" class="btn-icon" title="Silenciar / Activar sonido (M)">
+            <svg id="iconVolumeHigh" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+            <svg id="iconVolumeMute" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <line x1="23" y1="9" x2="17" y2="15"></line>
+              <line x1="17" y1="9" x2="23" y2="15"></line>
+            </svg>
+          </button>
+          <input type="range" id="volumeRange" min="0" max="1" step="0.01" value="0.8" class="volume-slider">
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal de Descarga de YouTube -->
+  <div id="ytDownloadModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg class="yt-icon-red" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+          </svg>
+          <h3>Descargar de YouTube (Audio + LRC)</h3>
+        </div>
+        <button id="btnCloseYtModal" class="btn-modal-close" title="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label for="ytUrlInput" class="modal-label">Enlace del video o audio de YouTube:</label>
+        <div class="modal-input-row">
+          <input type="text" id="ytUrlInput" class="modal-input" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off">
+          <button id="btnPasteYtUrl" class="btn-modal-action" title="Pegar del portapapeles">Pegar</button>
+        </div>
+
+        <div class="modal-folder-section">
+          <div class="modal-folder-info">
+            <span class="modal-label">Carpeta destino:</span>
+            <span id="ytTargetFolderText" class="modal-folder-path">Ninguna carpeta seleccionada</span>
+          </div>
+          <button id="btnChangeYtFolder" class="btn-modal-action-subtle">Cambiar carpeta...</button>
+        </div>
+
+        <div class="modal-options">
+          <label class="modal-checkbox-label">
+            <input type="checkbox" id="chkYtPlaylist">
+            <span>Descargar playlist completa</span>
+          </label>
+          <div class="modal-format-group">
+            <label for="selectYtFormat" class="modal-format-label">Formato:</label>
+            <select id="selectYtFormat" class="modal-select">
+              <option value="m4a" selected>M4A (Nativo / Rápido)</option>
+              <option value="opus">Opus (.opus)</option>
+              <option value="mp3">MP3</option>
+            </select>
+          </div>
+          <span class="modal-badge-info">LRC: Español</span>
+        </div>
+
+        <!-- Progreso de descarga en vivo -->
+        <div id="ytProgressContainer" class="modal-progress-container hidden">
+          <div class="progress-status-row">
+            <span id="ytProgressStatus" class="progress-status-text">Iniciando descarga...</span>
+            <span id="ytProgressPercent" class="progress-status-percent">0%</span>
+          </div>
+          <div class="modal-progress-bar">
+            <div id="ytProgressBarFill" class="modal-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-details-row">
+            <span id="ytProgressSpeed" class="progress-detail">-- MiB/s</span>
+            <span id="ytProgressEta" class="progress-detail">ETA: --:--</span>
+          </div>
+        </div>
+
+        <div id="ytDownloadError" class="modal-error-box hidden"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnCancelYtDownload" class="btn-modal-secondary">Cerrar</button>
+        <button id="btnStartYtDownload" class="btn-modal-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span id="btnStartYtDownloadText">Descargar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Descarga de Spotify -->
+  <div id="spotifyDownloadModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-card-spotify">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg class="spotify-icon-green" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.494 17.306c-.216.353-.675.466-1.028.25-2.817-1.722-6.363-2.112-10.539-1.157-.404.093-.812-.162-.904-.566-.093-.404.162-.812.566-.904 4.575-1.045 8.5-4.597 11.655.45.353.216.466.675.25 1.028zm1.464-3.26c-.272.443-.853.585-1.296.313-3.226-1.982-8.144-2.556-11.96-1.398-.5.152-1.034-.132-1.186-.632-.152-.5.132-1.034.632-1.186 4.364-1.324 9.78-.686 13.498 1.606.443.272.585.853.313 1.296zm.126-3.41c-3.869-2.297-10.25-2.508-13.935-1.39-.594.18-1.228-.158-1.408-.752-.18-.594.158-1.228.752-1.408 4.238-1.286 11.289-1.038 15.753 1.613.535.318.71 1.01.392 1.545-.318.535-1.01.71-1.545.392z"/>
+          </svg>
+          <h3>Descargar de Spotify (Audio + Letras LRC)</h3>
+        </div>
+        <button id="btnCloseSpotifyModal" class="btn-modal-close" title="Cerrar">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <label for="spotifyUrlInput" class="modal-label">Enlace de Canción, Álbum, Playlist o Artista:</label>
+        <div class="modal-input-row">
+          <input type="text" id="spotifyUrlInput" class="modal-input" placeholder="https://open.spotify.com/track/..." autocomplete="off">
+          <button id="btnPasteSpotifyUrl" class="btn-modal-action" title="Pegar del portapapeles">Pegar</button>
+          <button id="btnAnalyzeSpotify" class="btn-modal-action-highlight">Buscar</button>
+        </div>
+
+        <div class="modal-folder-section">
+          <div class="modal-folder-info">
+            <span class="modal-label">Carpeta destino:</span>
+            <span id="spotifyTargetFolderText" class="modal-folder-path">Ninguna carpeta seleccionada</span>
+          </div>
+          <button id="btnChangeSpotifyFolder" class="btn-modal-action-subtle">Cambiar carpeta...</button>
+        </div>
+
+        <div class="modal-options">
+          <div class="modal-format-group">
+            <label for="selectSpotifyFormat" class="modal-format-label">Formato:</label>
+            <select id="selectSpotifyFormat" class="modal-select">
+              <option value="m4a" selected>M4A (Rápido / Calidad original)</option>
+              <option value="opus">Opus (.opus)</option>
+              <option value="mp3">MP3</option>
+            </select>
+          </div>
+          <span class="modal-badge-info">Letras: LRCLIB (Sincronizadas .lrc)</span>
+        </div>
+
+        <!-- Vista previa de canciones encontradas -->
+        <div id="spotifyPreviewCard" class="spotify-preview-card hidden">
+          <div class="spotify-preview-header">
+            <img id="spotifyPreviewCover" class="spotify-preview-cover" src="" alt="Portada">
+            <div class="spotify-preview-info">
+              <span id="spotifyPreviewType" class="spotify-type-pill">Álbum</span>
+              <h4 id="spotifyPreviewTitle" class="spotify-preview-title">Título</h4>
+              <p id="spotifyPreviewSubtitle" class="spotify-preview-subtitle">Artista</p>
+              <span id="spotifyPreviewCount" class="spotify-preview-count">0 canciones listas para descargar</span>
+            </div>
+          </div>
+          <div class="spotify-track-list-wrapper">
+            <ul id="spotifyTrackList" class="spotify-track-list"></ul>
+          </div>
+        </div>
+
+        <!-- Progreso de descarga en cola -->
+        <div id="spotifyProgressContainer" class="modal-progress-container hidden">
+          <div class="progress-status-row">
+            <span id="spotifyCurrentTrackName" class="progress-status-text">Iniciando...</span>
+            <span id="spotifyBatchCount" class="progress-status-percent">1 / 1</span>
+          </div>
+          <div class="modal-progress-bar">
+            <div id="spotifyProgressBarFill" class="modal-progress-fill spotify-progress-fill" style="width: 0%;"></div>
+          </div>
+          <div class="progress-details-row">
+            <span id="spotifyProgressStatus" class="progress-detail">Descargando...</span>
+            <span id="spotifyLrcStatus" class="progress-detail spotify-lrc-pill">LRC</span>
+          </div>
+        </div>
+
+        <div id="spotifyDownloadError" class="modal-error-box hidden"></div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnCancelSpotifyDownload" class="btn-modal-secondary">Cerrar</button>
+        <button id="btnStartSpotifyDownload" class="btn-modal-primary btn-modal-spotify" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span id="btnStartSpotifyDownloadText">Descargar Canciones</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Radios Online -->
+  <div id="radiosModal" class="modal-backdrop hidden">
+    <div class="modal-card modal-card-radios">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="2"></circle>
+            <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+          </svg>
+          <h3>Estaciones de Radio Online</h3>
+        </div>
+        <button id="btnCloseRadiosModal" class="btn-modal-close" title="Cerrar">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="radio-custom-input-row">
+          <input type="text" id="customRadioUrl" class="modal-input" placeholder="https://streaming.radio... (Icecast/MP3/AAC)">
+          <button id="btnPlayCustomRadio" class="btn-modal-action-highlight">Sintonizar</button>
+        </div>
+        <div class="radio-presets-list" id="radioPresetsList">
+          <!-- Estaciones recomendadas precargadas -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de Navegación Inferior para Móviles -->
+  <nav class="mobile-nav-bar" id="mobileNavBar">
+    <button class="mobile-nav-btn active" data-tab="songs" id="tabBtnSongs">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M9 18V5l12-2v13"></path>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="16" r="3"></circle>
+      </svg>
+      <span>Música</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="lyrics" id="tabBtnLyrics">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+      <span>Letras</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="radios" id="tabBtnRadios">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="2"></circle>
+        <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49m11.31-2.82a10 10 0 0 1 0 14.14m-14.14 0a10 10 0 0 1 0-14.14"></path>
+      </svg>
+      <span>Radios</span>
+    </button>
+    <button class="mobile-nav-btn" data-tab="downloads" id="tabBtnDownloads">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      <span>Descargas</span>
+    </button>
+  </nav>
+
+  <!-- Elemento de audio nativo -->
+  <audio id="audioElement" preload="metadata"></audio>
+
+  <!-- Scripts -->
+  <script src="romanizer.js"></script>
+  <script src="parsers.js"></script>
+  <script src="spotube.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

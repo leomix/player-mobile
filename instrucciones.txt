@@ -1,0 +1,14 @@
+Para que no tengas que instalar Android Studio ni configurar Java o el SDK de Android en tu PC, se configuró el flujo de integración continua en .github/workflows/build-apk.yml:
+
+Sube la carpeta player-mobile a un repositorio de GitHub:
+powershell
+cd c:\xampp\htdocs\player-mobile
+git init
+git add .
+git commit -m "Aura Player Android"
+git branch -M main
+git remote add origin https://github.com/TU_USUARIO/TU_REPOSITORIO.git
+git push -u origin main
+Entra a tu repositorio en GitHub y ve a la pestaña Actions.
+Verás en ejecución el trabajo Build Android APK (tarda aproximadamente 2 minutos en compilar con Gradle en los servidores de GitHub).
+Cuando termine, haz clic en la ejecución y en la sección Artifacts podrás descargar el archivo listo para instalar en tu teléfono: AuraPlayer-Debug-APK (archivo .apk).

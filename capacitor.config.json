@@ -1,0 +1,16 @@
+{
+  "appId": "com.aura.player",
+  "appName": "Aura Player",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorCookies": {
+      "enabled": true
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  }
+}
